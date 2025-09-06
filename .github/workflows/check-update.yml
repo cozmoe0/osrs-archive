@@ -47,7 +47,7 @@ jobs:
         if: steps.check-update.outputs.update_available == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ varts.ARTIFACT_NAME || 'client.jar' }}
+          name: ${{ vars.ARTIFACT_NAME || 'client.jar' }}
           path: ${{ steps.check-update.outputs.artifact_path }}
           retention-days: 1
 
