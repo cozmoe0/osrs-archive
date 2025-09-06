@@ -29,7 +29,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build release updater
-        run: cargo build --release && cp /target/release/osrs-archive /target/release/release-updater
+        run: cargo build --release
 
       - name: Check for updates
         id: check-update
