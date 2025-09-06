@@ -1,0 +1,83 @@
+name: Check for Updates
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+        type: string
+
+jobs:
+  check-for-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      update_available: ${{ steps.check-update.outputs.update_available }}
+      version: ${{ steps.check-update.outputs.version }}
+      artifact_path: ${{ steps.check-update.outputs.artifact_path }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release updater
+        run: cargo build --release && cp /target/release/osrs-archive /target/release/release-updater
+
+      - name: Check for updates
+        id: check-update
+        run: |
+          mkdir -p artifacts
+          ./target/release/release-updater \
+          --version-method="${{ vars.VERSION_METHOD || 'hash' }}" \
+          --version-prefix="${{ vars.VERSION_PREFIX || 'v' }}" \
+          --output-dir="artifacts"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUST_LOG: info
+
+      - name: Upload artifacts
+        if: steps.check-update.outputs.update_available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ varts.ARTIFACT_NAME || 'client.jar' }}
+          path: ${{ steps.check-update.outputs.artifact_path }}
+          retention-days: 1
+
+  create-release:
+    needs: check-for-updates
+    if: needs.check-for-updates.outputs.update_available == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ vars.ARTIFACT_NAME || 'client.jar' }}
+          path: .
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check-for-updates.outputs.version }}
+          name: Revision ${{ needs.check-for-updates.outputs.version }}
+          body: |
+            Automated release create for Revision update.
+            
+            Checksum (SHA-256): ${{ steps.check-update.outputs.checksum }}
+          files: ${{ vars.ARTIFACT_NAME || 'client.jar' }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
