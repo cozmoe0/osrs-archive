@@ -14,6 +14,7 @@ jobs:
       update_available: ${{ steps.check-update.outputs.update_available }}
       version: ${{ steps.check-update.outputs.version }}
       artifact_path: ${{ steps.check-update.outputs.artifact_path }}
+      checksum: ${{ steps.check-update.outputs.checksum }}
 
     steps:
       - name: Checkout Repository
