@@ -71,7 +71,7 @@ jobs:
           body: |
             Automated release create for Revision update.
             
-            Checksum (SHA-256): ${{ needs.check-for-update.outputs.checksum }}
+            Checksum (SHA-256): ${{ needs.check-for-updates.outputs.checksum }}
           files: ${{ vars.ARTIFACT_NAME || 'osrs-win.production.zip' }}
           draft: false
           prerelease: false
