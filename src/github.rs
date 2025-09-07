@@ -70,12 +70,12 @@ pub async fn should_create_release(
                     reason,
                 });
             }
-            
+
             // Same version but different content (checksum not found in body)
             let reason = "Same version but content has changed (different checksum)".to_string();
             log::info!("{}", reason);
             Ok(ReleaseCheck {
-                should_create: true,
+                should_create: false,
                 reason,
             })
         }
