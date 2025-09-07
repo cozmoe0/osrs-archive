@@ -22,13 +22,13 @@
 //! - [`github`] - GitHub API integration
 //! - [`version`] - PE executable version extraction
 
-use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use clap::Parser;
 use log::LevelFilter;
 use simple_logger::SimpleLogger;
+use std::path::{Path, PathBuf};
 
-use crate::actions::{ActionOutput, log_release_decision, set_github_actions_output};
+use crate::actions::{log_release_decision, set_github_actions_output, ActionOutput};
 use crate::downloader::download;
 use crate::file_ops::{calculate_checksum, safe_remove_file, zip_directory};
 use crate::github::{create_github_client, should_create_release};
@@ -71,21 +71,21 @@ struct Args {
 
     /// GitHub repository name
     #[arg(long, default_value = "osrs-archive")]
-    github_repo: String
+    github_repo: String,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     init_logging()?;
-    
+
     let args = Args::parse();
     let result = run_application(args).await;
-    
+
     if let Err(ref e) = result {
         log::error!("Application failed: {:?}", e);
         std::process::exit(1);
     }
-    
+
     result
 }
 
@@ -101,9 +101,10 @@ fn init_logging() -> Result<()> {
 /// Main application logic
 async fn run_application(args: Args) -> Result<()> {
     let output_dir = PathBuf::from(&args.output_dir);
-    
+
     // Download and package files
-    let artifact_path = download_files(&args.repo, &args.build, &output_dir, &args.artifact_name).await?;
+    let artifact_path =
+        download_files(&args.repo, &args.build, &output_dir, &args.artifact_name).await?;
     log::info!("Created artifact: {}", artifact_path.display());
 
     // Calculate checksum and extract version
@@ -120,8 +121,9 @@ async fn run_application(args: Args) -> Result<()> {
         &args.github_owner,
         &args.github_repo,
         &version,
-        &checksum
-    ).await?;
+        &checksum,
+    )
+    .await?;
 
     // Set GitHub Actions output and clean up if needed
     if release_check.should_create {
@@ -132,7 +134,7 @@ async fn run_application(args: Args) -> Result<()> {
         let output = ActionOutput::no_update();
         set_github_actions_output(&output)?;
         log_release_decision(false, &release_check.reason, &version);
-        
+
         // Clean up artifact file since no release will be created
         safe_remove_file(&artifact_path).await;
     }
@@ -141,28 +143,32 @@ async fn run_application(args: Args) -> Result<()> {
 }
 
 /// Downloads and packages files into a ZIP archive
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `repo` - Repository identifier (e.g., "osrs-win")
 /// * `build` - Build identifier (e.g., "production")
 /// * `output_dir` - Directory to download files to
 /// * `artifact_name` - Name of the resulting ZIP archive
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns the path to the created ZIP archive.
-async fn download_files(repo: &str, build: &str, output_dir: &Path, artifact_name: &str) -> Result<PathBuf> {
+async fn download_files(
+    repo: &str,
+    build: &str,
+    output_dir: &Path,
+    artifact_name: &str,
+) -> Result<PathBuf> {
     log::info!("Downloading files for {}.{}", repo, build);
-    download(repo, build, &output_dir.to_path_buf()).await
+    download(repo, build, &output_dir.to_path_buf())
+        .await
         .context("Failed to download files")?;
 
     log::info!("Compressing files into artifact archive...");
     let artifact_path = output_dir.join(artifact_name);
-    zip_directory(output_dir, &artifact_path)
-        .context("Failed to create ZIP archive")?;
-    
+    zip_directory(output_dir, &artifact_path).context("Failed to create ZIP archive")?;
+
     log::info!("Successfully created artifact archive: {}", artifact_name);
     Ok(artifact_path)
 }
-

@@ -1,10 +1,8 @@
-use std::cell::OnceCell;
-use std::collections::{HashMap, HashSet};
 use anyhow::{bail, Result};
 use jsonwebtoken::Algorithm::RS256;
 use jsonwebtoken::{DecodingKey, Validation};
-use serde::de::DeserializeOwned;
 use serde_json::Value;
+use std::collections::HashSet;
 
 const VERSIONS_URL: &str = "https://jagex.akamaized.net/direct6/<repo>/<repo>.json";
 const ALIASES_URL: &str = "https://jagex.akamaized.net/direct6/<repo>/alias.json";
@@ -25,7 +23,7 @@ pub struct Version {
     pub id: String,
     pub promote_time: u64,
     pub scan_time: u64,
-    pub version: String
+    pub version: String,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -36,7 +34,7 @@ pub struct Catalog {
     pub piece_format: String,
     pub piece_type: String,
     pub id: String,
-    pub meta_file: String
+    pub meta_file: String,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -56,18 +54,18 @@ pub struct Metafile {
 pub struct MetafileEntry {
     pub attr: u64,
     pub name: String,
-    pub size: u64
+    pub size: u64,
 }
 
 #[derive(Debug, Clone)]
 pub struct MetafilePadding {
     pub offset: u64,
-    pub size: u64
+    pub size: u64,
 }
 
 impl Config {
     pub fn new(repo: &str, build: &str) -> Self {
-       Self {
+        Self {
             repo: repo.to_string(),
             build: build.to_string(),
             version: Version::default(),
@@ -97,7 +95,10 @@ impl Config {
         let url = &self.parse_url(ALIASES_URL);
         let json = Self::get_config_json(&url).await?;
 
-        let alias = json[format!("{}.{}", &self.repo, &self.build).as_str()].as_str().unwrap().to_string();
+        let alias = json[format!("{}.{}", &self.repo, &self.build).as_str()]
+            .as_str()
+            .unwrap()
+            .to_string();
         self.alias = alias;
 
         Ok(self)
@@ -175,8 +176,7 @@ impl Config {
         Ok(self)
     }
 
-    async fn get_config_json(url: &str) -> Result<Value>
-    {
+    async fn get_config_json(url: &str) -> Result<Value> {
         let http = reqwest::Client::new();
         let response = http.get(url).send().await?;
 

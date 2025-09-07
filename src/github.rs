@@ -9,32 +9,31 @@ pub struct ReleaseCheck {
 }
 
 /// Checks if a new GitHub release should be created based on version and checksum
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `github` - Authenticated GitHub client
 /// * `owner` - Repository owner (username or organization)
 /// * `repo` - Repository name
 /// * `version` - Current version string
 /// * `checksum` - Current artifact checksum
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns `ReleaseCheck` indicating whether a new release should be created and why.
 pub async fn should_create_release(
     github: &Octocrab,
     owner: &str,
     repo: &str,
     version: &str,
-    checksum: &str
+    checksum: &str,
 ) -> Result<ReleaseCheck> {
-    log::info!("Checking if release should be created for version: {}", version);
-    
-    let latest_release = github
-        .repos(owner, repo)
-        .releases()
-        .get_latest()
-        .await;
+    log::info!(
+        "Checking if release should be created for version: {}",
+        version
+    );
+
+    let latest_release = github.repos(owner, repo).releases().get_latest().await;
 
     match latest_release {
         Ok(release) => {
@@ -71,7 +70,7 @@ pub async fn should_create_release(
                     reason,
                 });
             }
-
+            
             // Same version but different content (checksum not found in body)
             let reason = "Same version but content has changed (different checksum)".to_string();
             log::info!("{}", reason);
@@ -92,13 +91,13 @@ pub async fn should_create_release(
 }
 
 /// Creates a GitHub client with the provided personal access token
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `token` - GitHub personal access token
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns an authenticated `Octocrab` client.
 pub fn create_github_client(token: &str) -> Result<Octocrab> {
     Octocrab::builder()
@@ -117,7 +116,7 @@ mod tests {
             should_create: true,
             reason: "Test reason".to_string(),
         };
-        
+
         assert!(check.should_create);
         assert_eq!(check.reason, "Test reason");
     }
