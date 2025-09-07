@@ -1,12 +1,9 @@
 name: Check for Updates
 
 on:
+  schedule:
+    - cron: '*/30 * * * *'
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version'
-        required: true
-        type: string
 
 jobs:
   check-for-updates:
