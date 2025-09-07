@@ -36,8 +36,7 @@ jobs:
         run: |
           mkdir -p artifacts
           ./target/release/release-updater \
-          --version-method="${{ vars.VERSION_METHOD || 'hash' }}" \
-          --version-prefix="${{ vars.VERSION_PREFIX || 'v' }}" \
+          --artifact-name="${{ vars.ARTIFACT_NAME || 'osrs-win.production.zip' }}" \
           --output-dir="artifacts"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -47,7 +46,7 @@ jobs:
         if: steps.check-update.outputs.update_available == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ vars.ARTIFACT_NAME || 'client.jar' }}
+          name: ${{ vars.ARTIFACT_NAME || 'osrs-win.production.zip' }}
           path: ${{ steps.check-update.outputs.artifact_path }}
           retention-days: 1
 
@@ -62,7 +61,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: ${{ vars.ARTIFACT_NAME || 'client.jar' }}
+          name: ${{ vars.ARTIFACT_NAME || 'osrs-win.production.zip' }}
           path: .
 
       - name: Create Release
@@ -75,7 +74,7 @@ jobs:
             Automated release create for Revision update.
             
             Checksum (SHA-256): ${{ steps.check-update.outputs.checksum }}
-          files: ${{ vars.ARTIFACT_NAME || 'client.jar' }}
+          files: ${{ vars.ARTIFACT_NAME || 'osrs-win.production.zip' }}
           draft: false
           prerelease: false
           generate_release_notes: false
