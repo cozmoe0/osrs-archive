@@ -27,3 +27,4 @@ base64 = "0.22.1"
 flate2 = "1.1.2"
 pelite = { version = "0.10.0", features = ["resources_nostd"] }
 zip = "5.0.0"
+tempfile = "3.21.0"
